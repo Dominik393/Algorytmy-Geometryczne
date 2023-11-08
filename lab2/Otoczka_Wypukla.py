@@ -1,5 +1,7 @@
 import math
 import random
+import time
+
 import matplotlib.pyplot as plt
 
 
@@ -97,87 +99,98 @@ def det_3D_matrix(point, line):
 
     return positive - negative
 
+def to_angle(p1, p2):
+    return math.atan2(p2[1] - p1[1], p2[0] - p1[0])
 
-def Graham(sett):
-    lowest_point = (float('inf'), float('inf'))
-    to_skip = -1
+def square_dist(p1, p2):
+    return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
 
-    for i in range(0,len(sett)):
-        if sett[i][1]  < lowest_point[1]:
-            lowest_point = sett[i]
-            to_skip = i
-        elif sett[i][1] == lowest_point[1]:
-            if sett[i][0] < lowest_point[0]:
-                lowest_point = sett[i]
-                to_skip = i
+def Graham(points, epsilon = 0):
+    if len(points) < 3:
+        raise ValueError("Graham Scan requires at least 3 points")
 
-    negative_sett = []
-    neutral_sett = []
-    positive_sett = []
+    pivot = min(points, key=lambda p: (p[1], p[0]))
 
-    for i in range(len(sett)):
-        if i == to_skip:
-            continue
+    sorted_points = sorted(points, key=lambda p: (to_angle(pivot, p), -square_dist(pivot, p)))
+    sorted_points.remove(pivot)
 
-        y_diff = lowest_point[1] - sett[i][1]
-        x_diff = lowest_point[0] - sett[i][0]
-
-        if x_diff == 0:
-            neutral_sett.append([sett[i], float('inf')])
-        elif (y_diff/x_diff) > 0:
-            positive_sett.append([sett[i], (y_diff/x_diff)])
+    i = 0
+    while i < len(sorted_points) - 1:
+        if -epsilon <= det_3D_matrix(pivot, [sorted_points[i], sorted_points[i+1]]) <= epsilon:
+            if square_dist(pivot, sorted_points[i]) > square_dist(pivot, sorted_points[i+1]):
+                sorted_points.remove(sorted_points[i+1])
+            else:
+                sorted_points.remove(sorted_points[i])
         else:
-            negative_sett.append([sett[i], (y_diff/x_diff)])
+            i += 1
 
-    negative_sett.sort(key= lambda x: x[1])
-    positive_sett.sort(key=lambda x: x[1])
-
-    new_sett = positive_sett + neutral_sett + negative_sett
-    del positive_sett, negative_sett, neutral_sett, x_diff, y_diff, to_skip
-    new_sett = [x[0] for x in new_sett]
-
-    print(len(new_sett))
-
-    stack = [lowest_point, new_sett[0], new_sett[1]]
+    stack = [pivot, sorted_points[0], sorted_points[1]]
 
     i = 2
-    while i < len(new_sett):
-        if det_3D_matrix(new_sett[i], [stack[-1], stack[-2]]) > 1**(-14):
+    while i < len(sorted_points):
+        if det_3D_matrix(sorted_points[i],[stack[-2],stack[-1]]) < -epsilon:
             stack.pop()
-        elif det_3D_matrix(new_sett[i], [stack[-1], stack[-2]]) < -1**(-14):
-            stack.append(new_sett[i])
-            i+=1
-        else:   # 2 ostatnie punkty są współniowe
-            old_dist = ((stack[-1][0] - stack[-2][0])**2 + (stack[-1][1] - stack[-2][1])**2)**0.5
-            new_dist = ((stack[i][0] - stack[-2][0]) ** 2 + (stack[i][1] - stack[-2][1]) ** 2) ** 0.5
-
-            if new_dist > old_dist:
+        elif epsilon < det_3D_matrix(sorted_points[i],[stack[-2],stack[-1]]):
+            stack.append(sorted_points[i])
+            i += 1
+        else:
+            if square_dist(sorted_points[i], stack[-2]) > square_dist(stack[-1], stack[-2]):
                 stack.pop()
-                stack.append(new_sett[i])
+                stack.append(sorted_points[i])
+            i += 1
 
-            i+=1
-
-    visualize(stack)
-
+    return stack
 
 
-def visualize(sett):
+def Jarvis(points, epsilon = 0):
+    if len(points) < 3:
+        raise ValueError("Graham Scan requires at least 3 points")
+
+    points.sort( key=lambda p: (p[1], p[0]))
+    stack = [points[0]]
+
+
+    while True:
+        next_point = None
+        for p in points:
+            if p == stack[-1]:
+                continue
+            if next_point is None or det_3D_matrix(p, [stack[-1], next_point]) < -epsilon:
+                next_point = p
+
+        if next_point == points[0]:
+            break
+        stack.append(next_point)
+
+    return stack
+
+
+def visualize_prep(sett):
     setx = [x[0] for x in sett]
     sety = [y[1] for y in sett]
 
     plt.scatter(setx, sety)
-    plt.show()
 
 
 
 
 set1 = generate_rectangle_points(200, (-10,-10),(10,10))
-set2 = generate_circle_points(200, 10)
-set3 = generate_points(10, [-100,100], [-100, 100])
+set2 = generate_circle_points(10000, 10)
+set3 = generate_points(100, [-100,100], [-100, 100])
 set4 = generate_square_points(50, 50, (0,0), 10)
 
 
 graham_test_set = [(0,-5),(10,10),(0,50),(-10,10),(0,20), (-2,15),(2,15)]
 
-visualize(set2)
-Graham(set2)
+visualize_prep(set2)
+plt.show()
+
+start_time = time.time()
+Jarvis(set2,10**(-13))
+end_time = time.time()
+print("Czas Jarvisa: " + str(end_time - start_time))
+
+start_time = time.time()
+Graham(set2,10**(-13))
+end_time = time.time()
+print("Czas Grahama: " + str(end_time - start_time))
