@@ -175,7 +175,7 @@ def visualize_prep(sett):
 
 
 set1 = generate_rectangle_points(200, (-10,-10),(10,10))
-set2 = generate_circle_points(10000, 10)
+set2 = generate_circle_points(100, 10)
 set3 = generate_points(100, [-100,100], [-100, 100])
 set4 = generate_square_points(50, 50, (0,0), 10)
 
@@ -185,12 +185,12 @@ graham_test_set = [(0,-5),(10,10),(0,50),(-10,10),(0,20), (-2,15),(2,15)]
 visualize_prep(set2)
 plt.show()
 
-start_time = time.time()
+start_time = time.perf_counter()
 Jarvis(set2,10**(-13))
-end_time = time.time()
+end_time = time.perf_counter()
 print("Czas Jarvisa: " + str(end_time - start_time))
 
-start_time = time.time()
+start_time = time.perf_counter()
 Graham(set2,10**(-13))
-end_time = time.time()
+end_time = time.perf_counter()
 print("Czas Grahama: " + str(end_time - start_time))
