@@ -54,31 +54,13 @@ def generate_rectangle_points(amount, lowerleft, upperright):
 def generate_square_points(amount_per_side, amount_per_diagonal, lowerleft, length):
     points = []
 
-    aviable_sides = [0, 1, 2, 3] # Dolna, Prawa, Górna, Lewa
-    temp = random.randint(0, len(aviable_sides)-1)
-    sides = [aviable_sides[temp]]
-    aviable_sides.pop(temp)
-    temp = random.randint(0, len(aviable_sides)-1)
-    sides.append(aviable_sides[temp])
-
     for i in range(amount_per_side):
-        for side in sides:
-            if side == 0:
-                x = random.uniform(lowerleft[0], lowerleft[0] + length)
-                y = lowerleft[1]
-                points.append((x,y))
-            elif side == 1:
-                x = lowerleft[0] + length
-                y = random.uniform(lowerleft[1], lowerleft[1] + length)
-                points.append((x,y))
-            elif side == 2:
-                x = random.uniform(lowerleft[0], lowerleft[0] + length)
-                y = lowerleft[1] + length
-                points.append((x, y))
-            else:
-                x = lowerleft[0]
-                y = random.uniform(lowerleft[1], lowerleft[1] + length)
-                points.append((x,y))
+        x = random.uniform(lowerleft[0], lowerleft[0] + length)
+        y = lowerleft[1]
+        points.append((x,y))
+        x = lowerleft[0]
+        y = random.uniform(lowerleft[1], lowerleft[1] + length)
+        points.append((x,y))
 
     for i in range(amount_per_diagonal):
         x1, x2 = random.uniform(lowerleft[0], lowerleft[0] + length), random.uniform(lowerleft[0], lowerleft[0] + length)
@@ -157,6 +139,9 @@ def Jarvis(points, epsilon = 0):
                 continue
             if next_point is None or det_3D_matrix(p, [stack[-1], next_point]) < -epsilon:
                 next_point = p
+            elif epsilon > det_3D_matrix(p, [stack[-1], next_point]) > -epsilon:
+                if square_dist(next_point, stack[-1]) < square_dist(p, stack[-1]):
+                    next_point = p
 
         if next_point == points[0]:
             break
@@ -165,32 +150,99 @@ def Jarvis(points, epsilon = 0):
     return stack
 
 
-def visualize_prep(sett):
-    setx = [x[0] for x in sett]
-    sety = [y[1] for y in sett]
+def scatter(points, name = None):
+    setx = [x[0] for x in points]
+    sety = [y[1] for y in points]
+    plt.ylabel("Współrzędna Y")
+    plt.xlabel("Współrzędna X")
+    if name is not None:
+        plt.title(f"Rys. {name}")
 
     plt.scatter(setx, sety)
 
+def draw_lines(points):
+    for i in range(len(points)):
+        plt.plot([points[i][0],points[(i+1)%len(points)][0]],[points[i][1],points[(i+1)%len(points)][1]],
+                 color= 'r')
 
 
 
-set1 = generate_rectangle_points(200, (-10,-10),(10,10))
-set2 = generate_circle_points(100, 10)
-set3 = generate_points(100, [-100,100], [-100, 100])
-set4 = generate_square_points(50, 50, (0,0), 10)
-
-
+set1 = generate_points(50000, [-100, 100], [-100, 100])
+set2 = generate_circle_points(25000, 10)
+set3 = generate_rectangle_points(25000, (-10, -10), (10, 10))
+set4 = generate_square_points(6250, 6250, (0,0), 10)
 graham_test_set = [(0,-5),(10,10),(0,50),(-10,10),(0,20), (-2,15),(2,15)]
 
-visualize_prep(set2)
-plt.show()
+'''Zbiory'''
+
+# scatter(set1)
+# plt.show()
+#
+# scatter(set2)
+# plt.show()
+#
+# scatter(set3)
+# plt.show()
+#
+# scatter(set4, "2.4")
+# plt.show()
+
+'''Otoczki zbiorów'''
+
+# scatter(set1, "3.1 J")
+# scatter(Jarvis(set1, 10 ** (-13)))
+# draw_lines(Jarvis(set1, 10 ** (-13)))
+# plt.show()
+#
+# scatter(set1, "3.1")
+# scatter(Graham(set1, 10 ** (-13)))
+# draw_lines(Graham(set1, 10 ** (-13)))
+# plt.show()
+#
+#
+# scatter(set2, "3.2 J")
+# scatter(Jarvis(set2, 10 ** (-13)))
+# draw_lines(Jarvis(set2, 10 ** (-13)))
+# plt.show()
+#
+# scatter(set2, "3.2")
+# scatter(Graham(set2, 10 ** (-13)))
+# draw_lines(Graham(set2, 10 ** (-13)))
+# plt.show()
+#
+#
+# scatter(set3, "3.3 J")
+# scatter(Jarvis(set3, 10 ** (-13)))
+# draw_lines(Jarvis(set3, 10 ** (-13)))
+# plt.show()
+#
+# scatter(set3, "3.3")
+# scatter(Graham(set3, 10 ** (-13)))
+# draw_lines(Graham(set3, 10 ** (-13)))
+# plt.show()
+#
+#
+# scatter(set4, "3.4 J")
+# scatter(Jarvis(set4, 10**(-13)))
+# draw_lines(Jarvis(set4, 10**(-13)))
+# plt.show()
+#
+# scatter(set4, "3.4")
+# scatter(Graham(set4, 10**(-13)))
+# draw_lines(Graham(set4, 10**(-13)))
+# plt.show()
+
+'''Mierzenie czasu działania'''
+
+used_set = set4
 
 start_time = time.perf_counter()
-Jarvis(set2,10**(-13))
+Graham(used_set,10**(-13))
+end_time = time.perf_counter()
+print("Czas Grahama: " + str(end_time - start_time))
+
+start_time = time.perf_counter()
+Jarvis(used_set,10**(-13))
 end_time = time.perf_counter()
 print("Czas Jarvisa: " + str(end_time - start_time))
 
-start_time = time.perf_counter()
-Graham(set2,10**(-13))
-end_time = time.perf_counter()
-print("Czas Grahama: " + str(end_time - start_time))
