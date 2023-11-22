@@ -60,20 +60,27 @@ class Polygon:
             if self.points[(i - 1)%len(self.points)].y > self.points[i].y and self.points[(i + 1)%len(self.points)].y > self.points[i].y:
                 if det_3D_matrix(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) > 10**(-11):
                     self.dzielacy.append(self.points[i])
+                    self.points[i].type = 'd'
                 elif det_3D_matrix(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) < -10**(-11):
                     self.poczatkowy.append(self.points[i])
+                    self.points[i].type = 'p'
                 else:
                     self.prawidlowy.append(self.points[i])
+                    self.points[i].type = 'r'
             #Sąsiedzi są powyżej
             elif self.points[(i - 1)%len(self.points)].y < self.points[i].y and self.points[(i + 1)%len(self.points)].y < self.points[i].y:
                 if det_3D_matrix(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) > 10**(-11):
                     self.laczacy.append(self.points[i])
+                    self.points[i].type = 'l'
                 elif det_3D_matrix(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) < -10**(-11):
                     self.koncowy.append(self.points[i])
+                    self.points[i].type = 'k'
                 else:
                     self.prawidlowy.append(self.points[i])
+                    self.points[i].type = 'r'
             else:
                 self.prawidlowy.append(self.points[i])
+                self.points[i].type = 'r'
 
         self.classified = True
 
@@ -83,6 +90,3 @@ class Polygon:
             text += f"({point.x}, {point.y}), "
         text = text[:-2] + "]"
         return text
-
-
-print(det_3D_matrix(Point.Point(0,1),Point.Point(1,2), Point.Point(2,1)))

@@ -42,20 +42,19 @@ class App:
                 pygame.draw.line(self.window, (255, 255, 255), (self.polygon.points[i].x, self.polygon.points[i].y),
                                  (self.polygon.points[(i + 1) % len(self.polygon.points)].x,
                                   self.polygon.points[(i + 1) % len(self.polygon.points)].y))
-            for point in self.polygon.poczatkowy:
-                pygame.draw.circle(self.window, (24, 237, 81), (point.x, point.y), 8)
 
-            for point in self.polygon.koncowy:
-                pygame.draw.circle(self.window, (252, 18, 53), (point.x, point.y), 8)
+            for point in self.polygon.points:
+                if point.type == 'p':
+                    pygame.draw.circle(self.window, (24, 237, 81), (point.x, point.y), 8)
+                elif point.type == 'k':
+                    pygame.draw.circle(self.window, (252, 18, 53), (point.x, point.y), 8)
+                elif point.type == 'l':
+                    pygame.draw.circle(self.window, (2, 7, 163), (point.x, point.y), 8)
+                elif point.type == 'd':
+                    pygame.draw.circle(self.window, (82, 183, 255), (point.x, point.y), 8)
+                elif point.type == 'r':
+                    pygame.draw.circle(self.window, (79, 52, 20), (point.x, point.y), 8)
 
-            for point in self.polygon.laczacy:
-                pygame.draw.circle(self.window, (2, 7, 163), (point.x, point.y), 8)
-
-            for point in self.polygon.dzielacy:
-                pygame.draw.circle(self.window, (82, 183, 255), (point.x, point.y), 8)
-
-            for point in self.polygon.prawidlowy:
-                pygame.draw.circle(self.window, (79, 52, 20), (point.x, point.y), 8)
 
     def addPoint(self):
         mouse = pygame.mouse.get_pos()
