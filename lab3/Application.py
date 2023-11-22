@@ -19,23 +19,59 @@ class App:
         self.points = []
         self.polygon = None
 
-    def drawPolygon(self, polygon):
-        self.window.fill((0, 0, 0))
-        for i in range(len(polygon)):
-            pygame.draw.circle(self.window, (255, 255, 255), (polygon[i].x, polygon[i].y), 8)
-            pygame.draw.line(self.window, (255, 255, 255),(polygon[i].x, polygon[i].y),
-                             (polygon[(i+1)%len(polygon)].x, polygon[(i+1)%len(polygon)].y))
+    def drawCurrent(self):
+        self.window.fill(BLACK)
+        for i in range(len(self.points)):
+            pygame.draw.circle(self.window, (255, 255, 255), (self.points[i].x, self.points[i].y), 8)
+            pygame.draw.line(self.window, (255, 255, 255),(self.points[i].x, self.points[i].y),
+                             (self.points[(i+1)%len(self.points)].x, self.points[(i+1)%len(self.points)].y))
 
-        pygame.draw.circle(self.window, (0, 255, 100), (polygon[-1].x, polygon[-1].y), 8)
+        pygame.draw.circle(self.window, (0, 255, 100), (self.points[-1].x, self.points[-1].y), 8)
+
+    def drawPolygon(self):
+        if not self.polygon.classified:
+            self.window.fill(BLACK)
+            for i in range(len(self.polygon.points)):
+                pygame.draw.circle(self.window, (255, 255, 255), (self.polygon.points[i].x, self.polygon.points[i].y), 8)
+                pygame.draw.line(self.window, (255, 255, 255),(self.polygon.points[i].x, self.polygon.points[i].y),
+                                 (self.polygon.points[(i+1)%len(self.polygon.points)].x, self.polygon.points[(i+1)%len(self.polygon.points)].y))
+
+        else:
+            self.window.fill(BLACK)
+            for i in range(len(self.polygon.points)):
+                pygame.draw.line(self.window, (255, 255, 255), (self.polygon.points[i].x, self.polygon.points[i].y),
+                                 (self.polygon.points[(i + 1) % len(self.polygon.points)].x,
+                                  self.polygon.points[(i + 1) % len(self.polygon.points)].y))
+            for point in self.polygon.poczatkowy:
+                pygame.draw.circle(self.window, (24, 237, 81), (point.x, point.y), 8)
+
+            for point in self.polygon.koncowy:
+                pygame.draw.circle(self.window, (252, 18, 53), (point.x, point.y), 8)
+
+            for point in self.polygon.laczacy:
+                pygame.draw.circle(self.window, (2, 7, 163), (point.x, point.y), 8)
+
+            for point in self.polygon.dzielacy:
+                pygame.draw.circle(self.window, (82, 183, 255), (point.x, point.y), 8)
+
+            for point in self.polygon.prawidlowy:
+                pygame.draw.circle(self.window, (79, 52, 20), (point.x, point.y), 8)
 
     def addPoint(self):
         mouse = pygame.mouse.get_pos()
         self.points.append(Point(mouse[0], mouse[1]))
-        self.drawPolygon(self.points)
+        self.drawCurrent()
 
     def finishPolygon(self):
         self.polygon = Polygon(self.points)
         self.points = []
+
+    def classify(self):
+        if self.polygon is None:
+            return
+
+        self.polygon.classify()
+
 
     def run(self):
         saveButton = Button(self.WIDTH - self.WIDTH//4, self.HEIGHT-80, self.WIDTH//4, 80, self.window, "Zapisz")
@@ -63,14 +99,12 @@ class App:
                             self.window.fill(BLACK)
                             self.polygon = None
                         elif calcButton.isClicked():
-                            continue
+                            self.classify()
                         elif loadButton.isClicked():
                             loader = Loader()
                             inWin.run()
                             self.polygon = loader.load(inWin.text)
                             inWin.reset()
-                            if self.polygon:
-                                self.polygon = self.polygon.points
                             self.window.fill(BLACK)
                         elif createButton.isClicked():
                             self.polygon = None
@@ -80,7 +114,7 @@ class App:
                             self.addPoint()
 
             if self.polygon is not None:
-                self.drawPolygon(self.polygon)
+                self.drawPolygon()
 
 
             saveButton.draw()

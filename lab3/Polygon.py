@@ -1,8 +1,14 @@
 import Point
 import math
 
-def getAngle(a, b, c):
-    return abs(math.atan2(c.y-b.y, c.x-b.x) - math.atan2(a.y-b.y, a.x-b.x))
+def det_3D_matrix(a, b, c):
+    positive = (a.x * b.y) + (a.y * c.x) + (b.x * c.y)
+    negative = (b.y * c.x) + (a.x * c.y) + (a.y * b.x)
+
+    return positive - negative
+    # 0 - Na prostej
+    # >0 - Nad prostą
+    # <0 - Pod prostą
 
 class Polygon:
     def __init__(self, points = None):
@@ -10,6 +16,13 @@ class Polygon:
             self.points = []
         else:
             self.points = points
+
+        self.classified = False
+        self.poczatkowy = []
+        self.koncowy = []
+        self.laczacy = []
+        self.dzielacy = []
+        self.prawidlowy = []
 
     def loadList(self, list):
         for point in list:
@@ -42,32 +55,27 @@ class Polygon:
         return True
 
     def classify(self):
-        poczatkowy = []
-        koncowy = []
-        laczacy = []
-        dzielacy = []
-        prawidlowy = []
-
         for i in range(len(self.points)):
-            #Obaj są poniżej
-            if self.points[(i - 1)%len(self.points)].y > self.points[i] and self.points[(i + 1)%len(self.points)].y > self.points[i]:
-                if getAngle(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) > math.pi:
-                    dzielacy.append(self.points[i])
-                elif getAngle(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) < math.pi:
-                    poczatkowy.append(self.points[i])
+            #Sąsiedzi są poniżej
+            if self.points[(i - 1)%len(self.points)].y > self.points[i].y and self.points[(i + 1)%len(self.points)].y > self.points[i].y:
+                if det_3D_matrix(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) > 10**(-11):
+                    self.dzielacy.append(self.points[i])
+                elif det_3D_matrix(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) < -10**(-11):
+                    self.poczatkowy.append(self.points[i])
                 else:
-                    prawidlowy.append(self.points[i])
-            elif self.points[(i - 1)%len(self.points)].y < self.points[i] and self.points[(i + 1)%len(self.points)].y < self.points[i]:
-                if getAngle(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) > math.pi:
-                    laczacy.append(self.points[i])
-                elif getAngle(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) < math.pi:
-                    koncowy.append(self.points[i])
+                    self.prawidlowy.append(self.points[i])
+            #Sąsiedzi są powyżej
+            elif self.points[(i - 1)%len(self.points)].y < self.points[i].y and self.points[(i + 1)%len(self.points)].y < self.points[i].y:
+                if det_3D_matrix(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) > 10**(-11):
+                    self.laczacy.append(self.points[i])
+                elif det_3D_matrix(self.points[(i - 1)%len(self.points)], self.points[i], self.points[(i + 1)%len(self.points)]) < -10**(-11):
+                    self.koncowy.append(self.points[i])
                 else:
-                    prawidlowy.append(self.points[i])
+                    self.prawidlowy.append(self.points[i])
             else:
-                prawidlowy.append(self.points[i])
+                self.prawidlowy.append(self.points[i])
 
-        return poczatkowy, koncowy, laczacy, dzielacy, prawidlowy
+        self.classified = True
 
     def __repr__(self):
         text = "["
@@ -75,3 +83,6 @@ class Polygon:
             text += f"({point.x}, {point.y}), "
         text = text[:-2] + "]"
         return text
+
+
+print(det_3D_matrix(Point.Point(0,1),Point.Point(1,2), Point.Point(2,1)))
