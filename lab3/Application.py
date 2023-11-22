@@ -4,6 +4,7 @@ from Polygon import Polygon
 from Button import Button
 from Saver import Saver
 from Loader import Loader
+from InputWindow import InputWindow
 
 BLACK = (0, 0, 0)
 
@@ -43,6 +44,8 @@ class App:
                             "Załaduj")
         createButton = Button(0, self.HEIGHT - 80, self.WIDTH // 4, 80, self.window,
                             "Stwórz")
+        inWin = InputWindow(100, 200, 700, 100, self.window)
+
 
         while self.isRunning:
 
@@ -52,20 +55,23 @@ class App:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         if saveButton.isClicked():
-                            saver = Saver(100, 200, 700, 100, self.window)
-                            saver.run()
+                            saver = Saver()
                             self.finishPolygon()
-                            print(saver.text)
-                            print(self.polygon)
-                            saver.save(self.polygon)
+                            inWin.run()
+                            saver.save(self.polygon, inWin.text)
+                            inWin.reset()
                             self.window.fill(BLACK)
                             self.polygon = None
                         elif calcButton.isClicked():
                             continue
                         elif loadButton.isClicked():
                             loader = Loader()
-                            self.polygon = loader.load()
-                            self.polygon = self.polygon.points
+                            inWin.run()
+                            self.polygon = loader.load(inWin.text)
+                            inWin.reset()
+                            if self.polygon:
+                                self.polygon = self.polygon.points
+                            self.window.fill(BLACK)
                         elif createButton.isClicked():
                             self.polygon = None
                             self.points = []

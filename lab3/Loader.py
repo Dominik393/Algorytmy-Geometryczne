@@ -3,11 +3,14 @@ import pickle
 
 class Loader:
     def __init__(self):
-        self.polygon = None
+        self.polygons = None
 
-    def load(self):
+    def load(self, name):
         with open("Save.txt", "rb") as file:
-            self.polygon = pickle.load(file)
-            print(self.polygon)
-            return self.polygon
+            self.polygons = pickle.load(file)
+            if name in self.polygons:
+                print(self.polygons[name])
+                return self.polygons[name][0]
+            else:
+                return None
 
