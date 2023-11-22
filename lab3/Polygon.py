@@ -84,6 +84,66 @@ class Polygon:
 
         self.classified = True
 
+    def triangulate(self):
+        if not self.yMonotonicity():
+            return
+
+        lowestIndex = 0
+        highestIndex = 0
+        leftChain = []
+        rightChain = []
+
+        for i in range(len(self.points)):
+            lowestIndex = lowestIndex if self.points[lowestIndex].y > self.points[i].y else i
+            highestIndex = highestIndex if self.points[highestIndex].y < self.points[i].y else i
+
+        start = lowestIndex
+        end = highestIndex
+        while start != end:
+            if self.points[start].y >= self.points[(start + 1) % len(self.points)].y:
+                self.points[start].side = 'left'
+                leftChain.append(self.points[start])
+                start = (start + 1) % len(self.points)
+
+        start = highestIndex
+        end = lowestIndex
+        while start != end:
+            if self.points[start].y <= self.points[(start + 1) % len(self.points)].y:
+                self.points[start].side = 'right'
+                rightChain.append(self.points[start])
+                start = (start + 1) % len(self.points)
+
+        chain = []
+        i, j = len(leftChain) - 1, len(rightChain) - 1
+        while i > -1 and j > -1:
+            if leftChain[i].y < rightChain[j].y:
+                chain.append(leftChain[i])
+                i -= 1
+            else:
+                chain.append(rightChain[j])
+                j -= 1
+        while i > -1:
+            chain.append(leftChain[i])
+            i -= 1
+        while j > -1:
+            chain.append(rightChain[j])
+            j -= 1
+
+        stack = [chain[0], chain[1]]
+        triangles = []
+
+        for i in range(2, len(chain)):
+            while len(stack) > 1 and det_3D_matrix(stack[-2], stack[-1], chain[i]) > 0:
+                triangles.append([stack[-2], stack[-1], chain[i]])
+                stack.pop()
+            stack.append(chain[i])
+
+        return triangles
+
+
+
+
+
     def __repr__(self):
         text = "["
         for point in self.points:

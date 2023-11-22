@@ -3,6 +3,7 @@ class Point:
         self.x = x
         self.y = y
         self.type = None
+        self.side = None
 
     def __repr__(self):
         return f"({self.x}, {self.y})"

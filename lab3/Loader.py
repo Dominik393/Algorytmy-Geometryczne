@@ -9,7 +9,6 @@ class Loader:
         with open("Save.txt", "rb") as file:
             self.polygons = pickle.load(file)
             if name in self.polygons:
-                print(self.polygons[name])
                 return self.polygons[name][0]
             else:
                 return None

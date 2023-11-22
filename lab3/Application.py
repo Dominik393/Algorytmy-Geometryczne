@@ -71,15 +71,34 @@ class App:
 
         self.polygon.classify()
 
+    def drawTriangles(self, triangles):
+        self.window.fill(BLACK)
+        for triangle in triangles:
+            for i in range(len(triangle)):
+                pygame.draw.circle(self.window, (255, 255, 255), (triangle[i].x, triangle[i].y), 8)
+                pygame.draw.line(self.window, (255, 255, 255), (triangle[i].x, triangle[i].y),
+                                 (triangle[(i + 1) % len(triangle)].x, triangle[(i + 1) % len(triangle)].y))
+
 
     def run(self):
+        #Buttons
         saveButton = Button(self.WIDTH - self.WIDTH//4, self.HEIGHT-80, self.WIDTH//4, 80, self.window, "Zapisz")
         calcButton = Button(self.WIDTH - 2*(self.WIDTH//4), self.HEIGHT-80, self.WIDTH//4, 80, self.window, "Oblicz")
         loadButton = Button(self.WIDTH - 3 * (self.WIDTH // 4), self.HEIGHT - 80, self.WIDTH // 4, 80, self.window,
                             "Załaduj")
         createButton = Button(0, self.HEIGHT - 80, self.WIDTH // 4, 80, self.window,
                             "Stwórz")
+
+        #SideButtons
+        clasiffyButton = Button(self.WIDTH - 1.5*(self.WIDTH//4), self.HEIGHT - 160, self.WIDTH // 4, 80, self.window,
+                            "Klasyfikacja")
+        trianButton = Button(self.WIDTH - 1.5*(self.WIDTH//4), self.HEIGHT - 240, self.WIDTH // 4, 80, self.window,
+                            "Triangulacja")
+        #Rest
         inWin = InputWindow(100, 200, 700, 100, self.window)
+        showSideButtons = False
+        allowToCreate = False
+        triangles = None
 
 
         while self.isRunning:
@@ -89,7 +108,9 @@ class App:
                     self.isRunning = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
+                        #Zapisz
                         if saveButton.isClicked():
+                            allowToCreate = False
                             saver = Saver()
                             self.finishPolygon()
                             inWin.run()
@@ -97,29 +118,67 @@ class App:
                             inWin.reset()
                             self.window.fill(BLACK)
                             self.polygon = None
+                            showSideButtons = False
+
+                        #Oblicz
                         elif calcButton.isClicked():
-                            self.classify()
+                            allowToCreate = False
+                            showSideButtons = True
+                            triangles = None
+
+                        #Wczytaj
                         elif loadButton.isClicked():
                             loader = Loader()
                             inWin.run()
                             self.polygon = loader.load(inWin.text)
                             inWin.reset()
                             self.window.fill(BLACK)
+                            triangles = None
+                            allowToCreate = False
+                            showSideButtons = False
+
+                        #Stwórz
                         elif createButton.isClicked():
                             self.polygon = None
                             self.points = []
                             self.window.fill(BLACK)
-                        else:
+                            triangles = None
+                            allowToCreate = True
+                            showSideButtons = False
+
+                        #Triangulate
+                        elif trianButton.isClicked() and showSideButtons:
+                            allowToCreate = False
+                            triangles = self.polygon.triangulate()
+
+                        #Sklasyfikuj
+                        elif clasiffyButton.isClicked() and showSideButtons:
+                            allowToCreate = False
+                            triangles = None
+                            self.classify()
+
+                        elif allowToCreate:
+                            showSideButtons = False
+                            triangles = None
                             self.addPoint()
+
+                        else:
+                            showSideButtons = False
 
             if self.polygon is not None:
                 self.drawPolygon()
+
+            if triangles is not None:
+                self.drawTriangles(triangles)
 
 
             saveButton.draw()
             calcButton.draw()
             loadButton.draw()
             createButton.draw()
+            if showSideButtons:
+                clasiffyButton.draw()
+                trianButton.draw()
             pygame.display.flip()
 
         pygame.quit()
