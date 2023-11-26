@@ -56,6 +56,12 @@ class App:
                 elif point.type == 'r':
                     pygame.draw.circle(self.window, (79, 52, 20), (point.x, point.y), 8)
 
+    def waitForButtonPress(self):
+        pressed = False
+        while not pressed:
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pressed = True
 
     def addPoint(self):
         mouse = pygame.mouse.get_pos()
@@ -75,8 +81,7 @@ class App:
     def drawTriangulated(self, triangles):
         for triangle in triangles:
             for i in range(len(triangle)):
-                pygame.draw.circle(self.window, WHITE, (triangle[i].x, triangle[i].y), 8)
-                pygame.draw.line(self.window, WHITE, (triangle[i].x, triangle[i].y),
+                pygame.draw.line(self.window, (255, 160, 160), (triangle[i].x, triangle[i].y),
                                  (triangle[(i + 1) % len(triangle)].x, triangle[(i + 1) % len(triangle)].y))
 
 
@@ -84,28 +89,31 @@ class App:
         _, chain = self.polygon.triangulate()
         stack = [chain[0], chain[1]]
 
+        self.window.fill(BLACK)
+        self.drawPolygon()
+        pygame.display.flip()
 
         for i in range(2, len(chain)):
             curr = chain[i]
 
-            keyPressed = False
+            for point in stack:
+                pygame.draw.circle(self.window, (255, 255, 0), (point.x, point.y), 8)
 
-            while not keyPressed:
-                for event in pygame.event.get():
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        keyPressed = True
-
+            pygame.draw.circle(self.window, (255, 0, 0), (curr.x, curr.y), 8)
+            pygame.display.flip()
 
             if curr.side != stack[-1].side:
-                fist = stack[-1]
+                first = stack[-1]
 
                 while stack:
                     vert = stack.pop()
                     if not self.polygon.doNeighbour(curr, vert):
-                        pygame.draw.line(self.window, WHITE, (curr.x, curr.y), (vert.x, vert.y))
+                        pygame.draw.line(self.window, (255, 160, 160), (curr.x, curr.y),
+                                         (vert.x, vert.y))
+                        self.waitForButtonPress()
+                        pygame.display.flip()
 
-                stack.append(fist)
-                stack.append(curr)
+                stack.append(first)
 
             else:
                 last = stack.pop()
@@ -115,20 +123,22 @@ class App:
 
                     if not self.polygon.doNeighbour(curr, vert):
                         if curr.side == 'right' and det_3D_matrix(last, curr, vert) > 0:
-                            pygame.draw.line(self.window, WHITE, (curr.x, curr.y), (vert.x, vert.y))
+                            pygame.draw.line(self.window, (255, 160, 160), (curr.x, curr.y),
+                                             (vert.x, vert.y))
+                            self.waitForButtonPress()
+                            pygame.display.flip()
                             last = vert
                         elif curr.side == 'left' and det_3D_matrix(last, curr, vert) < 0:
-                            pygame.draw.line(self.window, WHITE, (curr.x, curr.y), (vert.x, vert.y))
+                            pygame.draw.line(self.window, (255, 160, 160), (curr.x, curr.y),
+                                             (vert.x, vert.y))
+                            self.waitForButtonPress()
+                            pygame.display.flip()
                             last = vert
                         else:
                             break
 
-            for point in stack:
-                pygame.draw.circle(self.window, (255, 0, 0), (point.x, point.y), 8)
-
-            pygame.display.flip()
-            stack.append(vert)
-            stack.append(last)
+                stack.append(vert)
+                stack.append(last)
             stack.append(curr)
 
 
@@ -175,6 +185,8 @@ class App:
 
                         #Oblicz
                         elif calcButton.isClicked():
+                            if self.polygon is None:
+                                break
                             allowToCreate = False
                             showSideButtons = True
                             triangles = None
@@ -205,9 +217,11 @@ class App:
                             if self.polygon.yMonotonicity():
                                 print("Wielokąt jest Y monotoniczny")
                                 triangles, chain = self.polygon.triangulate()
+                                self.triangulationAnimation()
+                                showSideButtons = False
                             else:
                                 print("Wielokąt nie jest Y monotoniczny \nNie można stworzyć triangulacji")
-                            #self.triangulationAnimation()
+
 
                         #Sklasyfikuj
                         elif clasiffyButton.isClicked() and showSideButtons:
@@ -227,6 +241,7 @@ class App:
                 self.drawPolygon()
 
             if triangles is not None:
+                self.drawPolygon()
                 self.drawTriangulated(triangles)
 
 
