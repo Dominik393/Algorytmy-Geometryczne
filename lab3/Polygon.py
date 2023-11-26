@@ -120,43 +120,22 @@ class Polygon:
 
         chain = self.points.copy()
         chain.sort(reverse=True, key=lambda x: x.y)
-        # i, j = len(leftChain) - 1, len(rightChain) - 1
-        # while i > -1 and j > -1:
-        #     if leftChain[i].y < rightChain[j].y:
-        #         chain.append(leftChain[i])
-        #         i -= 1
-        #     else:
-        #         chain.append(rightChain[j])
-        #         j -= 1
-        # while i > -1:
-        #     chain.append(leftChain[i])
-        #     i -= 1
-        # while j > -1:
-        #     chain.append(rightChain[j])
-        #     j -= 1
 
         stack = [chain[0], chain[1]]
         triangles = []
-
-        # for i in range(2, len(chain)):
-        #     while len(stack) > 1 and det_3D_matrix(stack[-2], stack[-1], chain[i]) > 0:
-        #         triangles.append([stack[-2], stack[-1], chain[i]])
-        #         stack.pop()
-        #     stack.append(chain[i])
 
         for i in range(2, len(chain)):
             curr = chain[i]
 
             if curr.side != stack[-1].side:
-                fist = stack[-1]
+                first = stack[-1]
 
                 while stack:
                     vert = stack.pop()
                     if not self.doNeighbour(curr, vert):
                         triangles.append([curr, vert])
 
-                stack.append(fist)
-                stack.append(curr)
+                stack.append(first)
 
             else:
                 last = stack.pop()
@@ -176,14 +155,10 @@ class Polygon:
 
                 stack.append(vert)
                 stack.append(last)
-                stack.append(curr)
+            stack.append(curr)
 
 
         return triangles, chain
-
-
-
-
 
     def __repr__(self):
         text = "["

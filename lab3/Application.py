@@ -8,6 +8,7 @@ from InputWindow import InputWindow
 from Determinant import det_3D_matrix
 
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 
 class App:
     def __init__(self, width = 900, height = 700):
@@ -23,26 +24,25 @@ class App:
     def drawCurrent(self):
         self.window.fill(BLACK)
         for i in range(len(self.points)):
-            pygame.draw.circle(self.window, (255, 255, 255), (self.points[i].x, self.points[i].y), 8)
-            pygame.draw.line(self.window, (255, 255, 255),(self.points[i].x, self.points[i].y),
+            pygame.draw.circle(self.window, WHITE, (self.points[i].x, self.points[i].y), 8)
+            pygame.draw.line(self.window, WHITE,(self.points[i].x, self.points[i].y),
                              (self.points[(i+1)%len(self.points)].x, self.points[(i+1)%len(self.points)].y))
 
         pygame.draw.circle(self.window, (0, 255, 100), (self.points[-1].x, self.points[-1].y), 8)
 
     def drawPolygon(self):
+        self.window.fill(BLACK)
         if not self.polygon.classified:
-            self.window.fill(BLACK)
             for i in range(len(self.polygon.points)):
-                pygame.draw.circle(self.window, (255, 255, 255), (self.polygon.points[i].x, self.polygon.points[i].y), 8)
-                pygame.draw.line(self.window, (255, 255, 255),(self.polygon.points[i].x, self.polygon.points[i].y),
-                                 (self.polygon.points[(i+1)%len(self.polygon.points)].x, self.polygon.points[(i+1)%len(self.polygon.points)].y))
+                pygame.draw.circle(self.window, WHITE, (self.polygon.points[i].x, self.polygon.points[i].y), 8)
+                pygame.draw.line(self.window, WHITE,(self.polygon.points[i].x, self.polygon.points[i].y),
+                                 (self.polygon.points[(i+1)%len(self.polygon.points)].x, self.polygon.points[(i+1)%len(self.polygon.points)].y), 2)
 
         else:
-            self.window.fill(BLACK)
             for i in range(len(self.polygon.points)):
-                pygame.draw.line(self.window, (255, 255, 255), (self.polygon.points[i].x, self.polygon.points[i].y),
+                pygame.draw.line(self.window, WHITE, (self.polygon.points[i].x, self.polygon.points[i].y),
                                  (self.polygon.points[(i + 1) % len(self.polygon.points)].x,
-                                  self.polygon.points[(i + 1) % len(self.polygon.points)].y))
+                                  self.polygon.points[(i + 1) % len(self.polygon.points)].y), 2)
 
             for point in self.polygon.points:
                 if point.type == 'p':
@@ -72,43 +72,65 @@ class App:
 
         self.polygon.classify()
 
-    def drawTriangles(self, triangles):
-        self.window.fill(BLACK)
+    def drawTriangulated(self, triangles):
         for triangle in triangles:
             for i in range(len(triangle)):
-                pygame.draw.circle(self.window, (255, 255, 255), (triangle[i].x, triangle[i].y), 8)
-                pygame.draw.line(self.window, (255, 255, 255), (triangle[i].x, triangle[i].y),
+                pygame.draw.circle(self.window, WHITE, (triangle[i].x, triangle[i].y), 8)
+                pygame.draw.line(self.window, WHITE, (triangle[i].x, triangle[i].y),
                                  (triangle[(i + 1) % len(triangle)].x, triangle[(i + 1) % len(triangle)].y))
 
-    def triangulationAnimation(self, chain):
-        i = 2
+
+    def triangulationAnimation(self):
+        _, chain = self.polygon.triangulate()
         stack = [chain[0], chain[1]]
-        triangles = []
-        isRunning = True
 
-        while isRunning:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    isRunning = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    self.window.fill((0, 0, 0))
-                    self.drawPolygon()
 
-                    for point in stack:
-                        pygame.draw.circle(self.window, (255, 50, 0), (point.x, point.y), 8)
+        for i in range(2, len(chain)):
+            curr = chain[i]
 
-                    pygame.display.flip()
+            keyPressed = False
 
-                    if i < len(chain):
-                        if len(stack) > 1 and det_3D_matrix(stack[-2], stack[-1], chain[i]) > 0:
-                            triangles.append([stack[-2], stack[-1], chain[i]])
-                            self.drawTriangles(triangles)
-                            stack.pop()
+            while not keyPressed:
+                for event in pygame.event.get():
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        keyPressed = True
+
+
+            if curr.side != stack[-1].side:
+                fist = stack[-1]
+
+                while stack:
+                    vert = stack.pop()
+                    if not self.polygon.doNeighbour(curr, vert):
+                        pygame.draw.line(self.window, WHITE, (curr.x, curr.y), (vert.x, vert.y))
+
+                stack.append(fist)
+                stack.append(curr)
+
+            else:
+                last = stack.pop()
+
+                while stack:
+                    vert = stack.pop()
+
+                    if not self.polygon.doNeighbour(curr, vert):
+                        if curr.side == 'right' and det_3D_matrix(last, curr, vert) > 0:
+                            pygame.draw.line(self.window, WHITE, (curr.x, curr.y), (vert.x, vert.y))
+                            last = vert
+                        elif curr.side == 'left' and det_3D_matrix(last, curr, vert) < 0:
+                            pygame.draw.line(self.window, WHITE, (curr.x, curr.y), (vert.x, vert.y))
+                            last = vert
                         else:
-                            stack.append(chain[i])
-                    elif i == len(chain):
-                        isRunning = False
-                    i += 1
+                            break
+
+            for point in stack:
+                pygame.draw.circle(self.window, (255, 0, 0), (point.x, point.y), 8)
+
+            pygame.display.flip()
+            stack.append(vert)
+            stack.append(last)
+            stack.append(curr)
+
 
 
     def run(self):
@@ -180,8 +202,12 @@ class App:
                         #Triangulate
                         elif trianButton.isClicked() and showSideButtons:
                             allowToCreate = False
-                            triangles, chain = self.polygon.triangulate()
-                            #self.triangulationAnimation(chain)
+                            if self.polygon.yMonotonicity():
+                                print("Wielokąt jest Y monotoniczny")
+                                triangles, chain = self.polygon.triangulate()
+                            else:
+                                print("Wielokąt nie jest Y monotoniczny \nNie można stworzyć triangulacji")
+                            #self.triangulationAnimation()
 
                         #Sklasyfikuj
                         elif clasiffyButton.isClicked() and showSideButtons:
@@ -201,7 +227,7 @@ class App:
                 self.drawPolygon()
 
             if triangles is not None:
-                self.drawTriangles(triangles)
+                self.drawTriangulated(triangles)
 
 
             saveButton.draw()
