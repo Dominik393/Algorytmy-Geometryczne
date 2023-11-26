@@ -5,6 +5,7 @@ from Button import Button
 from Saver import Saver
 from Loader import Loader
 from InputWindow import InputWindow
+from Determinant import det_3D_matrix
 
 BLACK = (0, 0, 0)
 
@@ -79,6 +80,36 @@ class App:
                 pygame.draw.line(self.window, (255, 255, 255), (triangle[i].x, triangle[i].y),
                                  (triangle[(i + 1) % len(triangle)].x, triangle[(i + 1) % len(triangle)].y))
 
+    def triangulationAnimation(self, chain):
+        i = 2
+        stack = [chain[0], chain[1]]
+        triangles = []
+        isRunning = True
+
+        while isRunning:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    isRunning = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    self.window.fill((0, 0, 0))
+                    self.drawPolygon()
+
+                    for point in stack:
+                        pygame.draw.circle(self.window, (255, 50, 0), (point.x, point.y), 8)
+
+                    pygame.display.flip()
+
+                    if i < len(chain):
+                        if len(stack) > 1 and det_3D_matrix(stack[-2], stack[-1], chain[i]) > 0:
+                            triangles.append([stack[-2], stack[-1], chain[i]])
+                            self.drawTriangles(triangles)
+                            stack.pop()
+                        else:
+                            stack.append(chain[i])
+                    elif i == len(chain):
+                        isRunning = False
+                    i += 1
+
 
     def run(self):
         #Buttons
@@ -149,7 +180,8 @@ class App:
                         #Triangulate
                         elif trianButton.isClicked() and showSideButtons:
                             allowToCreate = False
-                            triangles = self.polygon.triangulate()
+                            triangles, chain = self.polygon.triangulate()
+                            #self.triangulationAnimation(chain)
 
                         #Sklasyfikuj
                         elif clasiffyButton.isClicked() and showSideButtons:

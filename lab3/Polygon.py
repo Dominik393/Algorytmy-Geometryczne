@@ -1,14 +1,6 @@
 import Point
+from Determinant import det_3D_matrix
 import math
-
-def det_3D_matrix(a, b, c):
-    positive = (a.x * b.y) + (a.y * c.x) + (b.x * c.y)
-    negative = (b.y * c.x) + (a.x * c.y) + (a.y * b.x)
-
-    return positive - negative
-    # 0 - Na prostej
-    # >0 - Nad prostą
-    # <0 - Pod prostą
 
 class Polygon:
     def __init__(self, points = None):
@@ -16,6 +8,8 @@ class Polygon:
             self.points = []
         else:
             self.points = points
+            for i in range(len(points)):
+                self.points[i].id = i
 
         self.classified = False
         self.poczatkowy = []
@@ -27,6 +21,17 @@ class Polygon:
     def loadList(self, list):
         for point in list:
             self.points.append(Point.Point(point[0], point[1]))
+        for i in range(len(self.points)):
+            self.points[i].id = i
+
+    def doNeighbour(self, pointA, pointB):
+        if abs(pointA.id - pointB.id) == 1:
+            return True
+        if pointA.id == 0 and pointB.id == len(self.points) - 1:
+            return True
+        if pointB.id == 0 and pointA.id == len(self.points) - 1:
+            return True
+        return False
 
     def yMonotonicity(self):
         lowestIndex = 0
@@ -113,32 +118,68 @@ class Polygon:
                 rightChain.append(self.points[start])
                 start = (start + 1) % len(self.points)
 
-        chain = []
-        i, j = len(leftChain) - 1, len(rightChain) - 1
-        while i > -1 and j > -1:
-            if leftChain[i].y < rightChain[j].y:
-                chain.append(leftChain[i])
-                i -= 1
-            else:
-                chain.append(rightChain[j])
-                j -= 1
-        while i > -1:
-            chain.append(leftChain[i])
-            i -= 1
-        while j > -1:
-            chain.append(rightChain[j])
-            j -= 1
+        chain = self.points.copy()
+        chain.sort(reverse=True, key=lambda x: x.y)
+        # i, j = len(leftChain) - 1, len(rightChain) - 1
+        # while i > -1 and j > -1:
+        #     if leftChain[i].y < rightChain[j].y:
+        #         chain.append(leftChain[i])
+        #         i -= 1
+        #     else:
+        #         chain.append(rightChain[j])
+        #         j -= 1
+        # while i > -1:
+        #     chain.append(leftChain[i])
+        #     i -= 1
+        # while j > -1:
+        #     chain.append(rightChain[j])
+        #     j -= 1
 
         stack = [chain[0], chain[1]]
         triangles = []
 
-        for i in range(2, len(chain)):
-            while len(stack) > 1 and det_3D_matrix(stack[-2], stack[-1], chain[i]) > 0:
-                triangles.append([stack[-2], stack[-1], chain[i]])
-                stack.pop()
-            stack.append(chain[i])
+        # for i in range(2, len(chain)):
+        #     while len(stack) > 1 and det_3D_matrix(stack[-2], stack[-1], chain[i]) > 0:
+        #         triangles.append([stack[-2], stack[-1], chain[i]])
+        #         stack.pop()
+        #     stack.append(chain[i])
 
-        return triangles
+        for i in range(2, len(chain)):
+            curr = chain[i]
+
+            if curr.side != stack[-1].side:
+                fist = stack[-1]
+
+                while stack:
+                    vert = stack.pop()
+                    if not self.doNeighbour(curr, vert):
+                        triangles.append([curr, vert])
+
+                stack.append(fist)
+                stack.append(curr)
+
+            else:
+                last = stack.pop()
+
+                while stack:
+                    vert = stack.pop()
+
+                    if not self.doNeighbour(curr, vert):
+                        if curr.side == 'right' and det_3D_matrix(last, curr, vert) > 0:
+                            triangles.append([curr, vert])
+                            last = vert
+                        elif curr.side == 'left' and det_3D_matrix(last, curr, vert) < 0:
+                            triangles.append([curr, vert])
+                            last = vert
+                        else:
+                            break
+
+                stack.append(vert)
+                stack.append(last)
+                stack.append(curr)
+
+
+        return triangles, chain
 
 
 
