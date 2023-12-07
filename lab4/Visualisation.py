@@ -27,7 +27,7 @@ class App:
 
     def addPoint(self):
         mouse = pygame.mouse.get_pos()
-        self.points.append(Point(mouse[0], mouse[1]))
+        self.points.append(Point(mouse[0], self.HEIGHT - mouse[1]))
         self.drawCurrent()
 
     def addLine(self):
@@ -36,13 +36,13 @@ class App:
 
     def drawCurrent(self):
         for line in self.lines:
-            pygame.draw.line(self.window, (110, 10, 150), (line.start.x, line.start.y), (line.end.x, line.end.y), 2)
+            pygame.draw.line(self.window, (110, 10, 150), (line.start.x, self.HEIGHT - line.start.y), (line.end.x, self.HEIGHT - line.end.y), 2)
         for point in self.points:
-            pygame.draw.circle(self.window, (80, 10, 150), (point.x, point.y), 8)
+            pygame.draw.circle(self.window, (80, 10, 150), (point.x, self.HEIGHT - point.y), 8)
 
     def drawPoints(self, points, color):
         for point in points:
-            pygame.draw.circle(self.window, color, (point.x, point.y), 8)
+            pygame.draw.circle(self.window, color, (point.x, self.HEIGHT - point.y), 8)
 
     def convertLines(self):
         for i in range(len(self.lines)):
@@ -70,12 +70,9 @@ class App:
                         self.addLine()
                         started_line = False
                     elif event.button == 3:
-                        self.convertLines()
                         new_points = find_intersections(self.lines)
-                        #self.convertPoints(new_points)
-                        self.drawPoints(new_points, (255, 0, 0))
-                        self.convertLines()
                         self.drawCurrent()
+                        self.drawPoints(new_points, (255, 0, 0))
 
             pygame.display.flip()
 

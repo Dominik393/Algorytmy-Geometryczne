@@ -38,8 +38,8 @@ class Line:
         return False
 
     def intersection_point(self, other):
-        a1 = (self.end.x - self.start.x)/ (self.end.y - self.start.y)
-        a2 = (other.end.x - other.start.x)/ (other.end.y - other.start.y)
+        a1 = (self.end.y - self.start.y)/ (self.end.x - self.start.x)
+        a2 = (other.end.y - other.start.y)/ (other.end.x - other.start.x)
         b1 = self.start.y - a1 * self.start.x
         b2 = other.start.y - a2 * other.start.x
 
