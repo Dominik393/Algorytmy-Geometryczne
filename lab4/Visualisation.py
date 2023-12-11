@@ -1,7 +1,8 @@
 import pygame
 from Point import Point
-from Line import Line
+from Line import *
 from Miotla import find_intersections
+from Button import *
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -18,13 +19,6 @@ class App:
         self.points = []
         self.lines = []
 
-    def waitForButtonPress(self):
-        pressed = False
-        while not pressed:
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    pressed = True
-
     def addPoint(self):
         mouse = pygame.mouse.get_pos()
         self.points.append(Point(mouse[0], self.HEIGHT - mouse[1]))
@@ -35,6 +29,7 @@ class App:
         self.drawCurrent()
 
     def drawCurrent(self):
+        self.window.fill(BLACK)
         for line in self.lines:
             pygame.draw.line(self.window, (110, 10, 150), (line.start.x, self.HEIGHT - line.start.y), (line.end.x, self.HEIGHT - line.end.y), 2)
         for point in self.points:
@@ -44,17 +39,16 @@ class App:
         for point in points:
             pygame.draw.circle(self.window, color, (point.x, self.HEIGHT - point.y), 8)
 
-    def convertLines(self):
-        for i in range(len(self.lines)):
-            self.lines[i].start.y = self.HEIGHT - self.lines[i].start.y
-            self.lines[i].end.y = self.HEIGHT - self.lines[i].end.y
-
-    def convertPoints(self, points):
-        for i in range(len(points)):
-            points[i].y = self.HEIGHT - points[i].y
+    def generateRandom(self, amount):
+        self.lines = generateRandomLines(amount, 0, self.WIDTH, 0, self.HEIGHT)
+        self.points = []
+        for line in self.lines:
+            self.points.append(line.start)
+            self.points.append(line.end)
 
     def run(self):
         started_line = False
+        genButton = Button(self.WIDTH - self.WIDTH//4, self.HEIGHT-80, self.WIDTH//4, 80, self.window, "Generuj")
 
         while self.isRunning:
 
@@ -62,7 +56,10 @@ class App:
                 if event.type == pygame.QUIT:
                     self.isRunning = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1 and not started_line:
+                    if event.button == 1 and genButton.isClicked():
+                        self.generateRandom(8)
+                        self.drawCurrent()
+                    elif event.button == 1 and not started_line:
                         self.addPoint()
                         started_line = True
                     elif event.button == 1 and started_line:
@@ -74,10 +71,11 @@ class App:
                         self.drawCurrent()
                         self.drawPoints(new_points, (255, 0, 0))
 
+            genButton.draw()
             pygame.display.flip()
 
         pygame.quit()
 
-
+pygame.init()
 apka = App()
 apka.run()

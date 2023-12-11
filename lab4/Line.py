@@ -1,3 +1,5 @@
+import random
+
 from Determinant import orientation
 from Point import Point
 class Line:
@@ -48,7 +50,24 @@ class Line:
 
         return Point(intersection_x, intersection_y)
 
-
-
     def __repr__(self):
         return f"[{self.start}, {self.end}]"
+
+def generateRandomLines(amount, xMin, xMax, yMin, yMax):
+    lines = []
+
+    xEnd = [i for i in range(xMin, xMax)]
+    yStart = 0
+    yEnd = 0
+    random.shuffle(xEnd)
+
+    for i in range(amount):
+        xStart = random.uniform(xMin, xMax)
+        yStart = random.uniform(yMin, yMax)
+        yEnd = random.uniform(yMin, yMax)
+        while yStart == yEnd:
+            yEnd = random.uniform(yMin, yMax)
+        lines.append(Line(Point(xStart, yStart), Point(xEnd[i], yEnd)))
+
+
+    return lines

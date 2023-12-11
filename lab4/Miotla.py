@@ -1,8 +1,5 @@
-from Point import *
-from Line import *
-from Determinant import *
 from Event import *
-
+from sortedcontainers import SortedSet
 
 def find_intersections(lines):
     events = []
@@ -11,7 +8,7 @@ def find_intersections(lines):
         events.append(Event(line.start.x, True, i))
         events.append(Event(line.end.x, False, i))
 
-    events.sort(key=lambda event: (event.x, not event.is_start))
+    events = SortedSet(events)
 
     active_segments = set()
     intersections = []
@@ -27,14 +24,3 @@ def find_intersections(lines):
 
     return intersections
 
-# Przykładowe użycie:
-lines = [
-    Line(Point(1, 1), Point(4, 4)),
-    Line(Point(1, 8), Point(2, 4)),
-    Line(Point(2, 2), Point(5, 3)),
-    Line(Point(3, 6), Point(5, 1)),
-    Line(Point(-5,10), Point(5, 0))
-]
-
-intersection_points = find_intersections(lines)
-print("Punkty przecięcia odcinków:", intersection_points)
