@@ -24,37 +24,37 @@ class App:
     def drawCurrent(self):
         self.window.fill(BLACK)
         for i in range(len(self.points)):
-            pygame.draw.circle(self.window, WHITE, (self.points[i].x, self.points[i].y), 8)
-            pygame.draw.line(self.window, WHITE,(self.points[i].x, self.points[i].y),
-                             (self.points[(i+1)%len(self.points)].x, self.points[(i+1)%len(self.points)].y))
+            pygame.draw.circle(self.window, WHITE, (self.points[i].val, self.points[i].y), 8)
+            pygame.draw.line(self.window, WHITE, (self.points[i].val, self.points[i].y),
+                             (self.points[(i+1)%len(self.points)].val, self.points[(i + 1) % len(self.points)].y))
 
-        pygame.draw.circle(self.window, (0, 255, 100), (self.points[-1].x, self.points[-1].y), 8)
+        pygame.draw.circle(self.window, (0, 255, 100), (self.points[-1].val, self.points[-1].y), 8)
 
     def drawPolygon(self):
         self.window.fill(BLACK)
         if not self.polygon.classified:
             for i in range(len(self.polygon.points)):
-                pygame.draw.circle(self.window, WHITE, (self.polygon.points[i].x, self.polygon.points[i].y), 8)
-                pygame.draw.line(self.window, WHITE,(self.polygon.points[i].x, self.polygon.points[i].y),
-                                 (self.polygon.points[(i+1)%len(self.polygon.points)].x, self.polygon.points[(i+1)%len(self.polygon.points)].y), 2)
+                pygame.draw.circle(self.window, WHITE, (self.polygon.points[i].val, self.polygon.points[i].y), 8)
+                pygame.draw.line(self.window, WHITE, (self.polygon.points[i].val, self.polygon.points[i].y),
+                                 (self.polygon.points[(i+1)%len(self.polygon.points)].val, self.polygon.points[(i + 1) % len(self.polygon.points)].y), 2)
 
         else:
             for i in range(len(self.polygon.points)):
-                pygame.draw.line(self.window, WHITE, (self.polygon.points[i].x, self.polygon.points[i].y),
-                                 (self.polygon.points[(i + 1) % len(self.polygon.points)].x,
+                pygame.draw.line(self.window, WHITE, (self.polygon.points[i].val, self.polygon.points[i].y),
+                                 (self.polygon.points[(i + 1) % len(self.polygon.points)].val,
                                   self.polygon.points[(i + 1) % len(self.polygon.points)].y), 2)
 
             for point in self.polygon.points:
                 if point.type == 'p':
-                    pygame.draw.circle(self.window, (24, 237, 81), (point.x, point.y), 8)
+                    pygame.draw.circle(self.window, (24, 237, 81), (point.val, point.y), 8)
                 elif point.type == 'k':
-                    pygame.draw.circle(self.window, (252, 18, 53), (point.x, point.y), 8)
+                    pygame.draw.circle(self.window, (252, 18, 53), (point.val, point.y), 8)
                 elif point.type == 'l':
-                    pygame.draw.circle(self.window, (2, 7, 163), (point.x, point.y), 8)
+                    pygame.draw.circle(self.window, (2, 7, 163), (point.val, point.y), 8)
                 elif point.type == 'd':
-                    pygame.draw.circle(self.window, (82, 183, 255), (point.x, point.y), 8)
+                    pygame.draw.circle(self.window, (82, 183, 255), (point.val, point.y), 8)
                 elif point.type == 'r':
-                    pygame.draw.circle(self.window, (79, 52, 20), (point.x, point.y), 8)
+                    pygame.draw.circle(self.window, (79, 52, 20), (point.val, point.y), 8)
 
     def waitForButtonPress(self):
         pressed = False
@@ -81,8 +81,8 @@ class App:
     def drawTriangulated(self, triangles):
         for triangle in triangles:
             for i in range(len(triangle)):
-                pygame.draw.line(self.window, (255, 160, 160), (triangle[i].x, triangle[i].y),
-                                 (triangle[(i + 1) % len(triangle)].x, triangle[(i + 1) % len(triangle)].y))
+                pygame.draw.line(self.window, (255, 160, 160), (triangle[i].val, triangle[i].y),
+                                 (triangle[(i + 1) % len(triangle)].val, triangle[(i + 1) % len(triangle)].y))
 
 
     def triangulationAnimation(self):
@@ -97,9 +97,9 @@ class App:
             curr = chain[i]
 
             for point in stack:
-                pygame.draw.circle(self.window, (255, 255, 0), (point.x, point.y), 8)
+                pygame.draw.circle(self.window, (255, 255, 0), (point.val, point.y), 8)
 
-            pygame.draw.circle(self.window, (255, 0, 0), (curr.x, curr.y), 8)
+            pygame.draw.circle(self.window, (255, 0, 0), (curr.val, curr.y), 8)
             pygame.display.flip()
 
             if curr.side != stack[-1].side:
@@ -108,8 +108,8 @@ class App:
                 while stack:
                     vert = stack.pop()
                     if not self.polygon.doNeighbour(curr, vert):
-                        pygame.draw.line(self.window, (255, 160, 160), (curr.x, curr.y),
-                                         (vert.x, vert.y))
+                        pygame.draw.line(self.window, (255, 160, 160), (curr.val, curr.y),
+                                         (vert.val, vert.y))
                         self.waitForButtonPress()
                         pygame.display.flip()
 
@@ -123,14 +123,14 @@ class App:
 
                     if not self.polygon.doNeighbour(curr, vert):
                         if curr.side == 'right' and det_3D_matrix(last, curr, vert) > 0:
-                            pygame.draw.line(self.window, (255, 160, 160), (curr.x, curr.y),
-                                             (vert.x, vert.y))
+                            pygame.draw.line(self.window, (255, 160, 160), (curr.val, curr.y),
+                                             (vert.val, vert.y))
                             self.waitForButtonPress()
                             pygame.display.flip()
                             last = vert
                         elif curr.side == 'left' and det_3D_matrix(last, curr, vert) < 0:
-                            pygame.draw.line(self.window, (255, 160, 160), (curr.x, curr.y),
-                                             (vert.x, vert.y))
+                            pygame.draw.line(self.window, (255, 160, 160), (curr.val, curr.y),
+                                             (vert.val, vert.y))
                             self.waitForButtonPress()
                             pygame.display.flip()
                             last = vert

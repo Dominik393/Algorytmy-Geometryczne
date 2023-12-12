@@ -1,6 +1,6 @@
 def det_3D_matrix(a, b, c):
-    positive = (a.x * b.y) + (a.y * c.x) + (b.x * c.y)
-    negative = (b.y * c.x) + (a.x * c.y) + (a.y * b.x)
+    positive = (a.val * b.y) + (a.y * c.val) + (b.val * c.y)
+    negative = (b.y * c.val) + (a.val * c.y) + (a.y * b.val)
 
     return positive - negative
     # 0 - Na prostej

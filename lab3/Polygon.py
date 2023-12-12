@@ -163,6 +163,6 @@ class Polygon:
     def __repr__(self):
         text = "["
         for point in self.points:
-            text += f"({point.x}, {point.y}), "
+            text += f"({point.val}, {point.y}), "
         text = text[:-2] + "]"
         return text

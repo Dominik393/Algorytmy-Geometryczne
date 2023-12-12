@@ -2,6 +2,8 @@ import random
 
 from Determinant import orientation
 from Point import Point
+
+
 class Line:
     def __init__(self, start, end):
         if start.x > end.x:
@@ -9,6 +11,7 @@ class Line:
 
         self.start = start
         self.end = end
+        self.curr = start.y
 
     def does_intersect(self, other):
         o1 = orientation(self.start, self.end, other.start)
@@ -39,19 +42,26 @@ class Line:
 
         return False
 
-    def intersection_point(self, other):
-        a1 = (self.end.y - self.start.y)/ (self.end.x - self.start.x)
-        a2 = (other.end.y - other.start.y)/ (other.end.x - other.start.x)
-        b1 = self.start.y - a1 * self.start.x
-        b2 = other.start.y - a2 * other.start.x
+    def get_slope(self):
+        return (self.end.y - self.start.y) / (self.end.x - self.start.x)
 
-        intersection_x = (b2 - b1)/(a1 - a2)
+    def get_intercept(self):
+        return self.start.y - self.get_slope() * self.start.x
+
+    def intersection_point(self, other):
+        a1 = self.get_slope()
+        a2 = other.get_slope()
+        b1 = self.get_intercept()
+        b2 = other.get_intercept()
+
+        intersection_x = (b2 - b1) / (a1 - a2)
         intersection_y = a1 * intersection_x + b1
 
         return Point(intersection_x, intersection_y)
 
     def __repr__(self):
         return f"[{self.start}, {self.end}]"
+
 
 def generateRandomLines(amount, xMin, xMax, yMin, yMax):
     lines = []
@@ -62,12 +72,11 @@ def generateRandomLines(amount, xMin, xMax, yMin, yMax):
     random.shuffle(xEnd)
 
     for i in range(amount):
-        xStart = random.uniform(xMin, xMax)
-        yStart = random.uniform(yMin, yMax)
-        yEnd = random.uniform(yMin, yMax)
+        xStart = random.randint(xMin, xMax)
+        yStart = random.randint(yMin, yMax)
+        yEnd = random.randint(yMin, yMax)
         while yStart == yEnd:
-            yEnd = random.uniform(yMin, yMax)
+            yEnd = random.randint(yMin, yMax)
         lines.append(Line(Point(xStart, yStart), Point(xEnd[i], yEnd)))
-
 
     return lines

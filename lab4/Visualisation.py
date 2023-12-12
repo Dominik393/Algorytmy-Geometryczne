@@ -1,8 +1,10 @@
 import pygame
-from Point import Point
+from Point import *
+from Event import *
 from Line import *
 from Miotla import find_intersections
 from Button import *
+from sortedcontainers import SortedSet
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -46,9 +48,52 @@ class App:
             self.points.append(line.start)
             self.points.append(line.end)
 
+
+    def awaitButtonPress(self):
+        pressed = False
+        while not pressed:
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pressed = True
+    def sweepAnimation(self):
+        events = []
+
+        for i, line in enumerate(self.lines):
+            events.append(Event(line.start.x, True, i))
+            events.append(Event(line.end.x, False, i))
+
+        events.sort(key=lambda event: (event.val, not event.is_start))
+
+        active_segments = SortedSet([])
+        intersections = []
+
+        for event in events:
+            self.window.fill(BLACK)
+            self.drawCurrent()
+            if event.is_start:
+                self.awaitButtonPress()
+                active_segments.add((self.lines[event.id].start.y, event.id))
+                curr = active_segments.index((self.lines[event.id].start.y, event.id))
+
+                if curr > 0:
+                    if self.lines[event.id].does_intersect(self.lines[active_segments[curr - 1][1]]):
+                        intersections.append(self.lines[event.id].intersection_point(self.lines[active_segments[curr - 1][1]]))
+                        self.drawPoints(intersections, (255, 0, 0))
+                if curr < len(active_segments) - 1:
+                    if self.lines[event.id].does_intersect(self.lines[active_segments[curr + 1][1]]):
+                        intersections.append(self.lines[event.id].intersection_point(self.lines[active_segments[curr + 1][1]]))
+                        self.drawPoints(intersections, (255, 0, 0))
+                pygame.display.flip()
+
+            else:
+                active_segments.remove((self.lines[event.id].start.y, event.id))
+
+
+
     def run(self):
         started_line = False
         genButton = Button(self.WIDTH - self.WIDTH//4, self.HEIGHT-80, self.WIDTH//4, 80, self.window, "Generuj")
+        animButton = Button(self.WIDTH - 2*self.WIDTH//4, self.HEIGHT-80, self.WIDTH//4, 80, self.window, "Animacja")
 
         while self.isRunning:
 
@@ -59,6 +104,8 @@ class App:
                     if event.button == 1 and genButton.isClicked():
                         self.generateRandom(8)
                         self.drawCurrent()
+                    if event.button == 1 and animButton.isClicked():
+                        self.sweepAnimation()
                     elif event.button == 1 and not started_line:
                         self.addPoint()
                         started_line = True
@@ -72,6 +119,7 @@ class App:
                         self.drawPoints(new_points, (255, 0, 0))
 
             genButton.draw()
+            animButton.draw()
             pygame.display.flip()
 
         pygame.quit()
