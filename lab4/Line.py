@@ -42,6 +42,8 @@ class Line:
 
         return False
 
+
+
     def get_slope(self):
         return (self.end.y - self.start.y) / (self.end.x - self.start.x)
 

@@ -5,6 +5,7 @@ from Line import *
 from Miotla import find_intersections
 from Button import *
 from sortedcontainers import SortedSet
+from queue import PriorityQueue
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -56,37 +57,76 @@ class App:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pressed = True
     def sweepAnimation(self):
-        events = []
+        q = PriorityQueue()
 
         for i, line in enumerate(self.lines):
-            events.append(Event(line.start.x, True, i))
-            events.append(Event(line.end.x, False, i))
-
-        events.sort(key=lambda event: (event.val, not event.is_start))
+            q.put(Event(line.start.x, 1, i))
+            q.put(Event(line.end.x, 0, i))
 
         active_segments = SortedSet([])
         intersections = []
+        calculatedPairs = []
 
-        for event in events:
-            self.window.fill(BLACK)
-            self.drawCurrent()
-            if event.is_start:
-                self.awaitButtonPress()
-                active_segments.add((self.lines[event.id].start.y, event.id))
-                curr = active_segments.index((self.lines[event.id].start.y, event.id))
+        while not q.empty():
+            currEvent = q.get()
 
+            if currEvent.is_start == 1:
+                active_segments.add((self.lines[currEvent.id].curr, currEvent.id))
+                curr = active_segments.index((self.lines[currEvent.id].curr, currEvent.id))
+
+                # Sprawdza czy przecina się z sąsiadem pod nim
                 if curr > 0:
-                    if self.lines[event.id].does_intersect(self.lines[active_segments[curr - 1][1]]):
-                        intersections.append(self.lines[event.id].intersection_point(self.lines[active_segments[curr - 1][1]]))
-                        self.drawPoints(intersections, (255, 0, 0))
+                    if self.lines[currEvent.id].does_intersect(self.lines[active_segments[curr - 1][1]]):
+                        if (min(currEvent.id, active_segments[curr - 1][1]),
+                            max(currEvent.id, active_segments[curr - 1][1])) in calculatedPairs:
+                            pass
+                        else:
+                            intersections.append(
+                                self.lines[currEvent.id].intersection_point(self.lines[active_segments[curr - 1][1]]))
+                            calculatedPairs.append((min(currEvent.id, active_segments[curr - 1][1]),
+                                                    max(currEvent.id, active_segments[curr - 1][1])))
+
+                            if self.lines[currEvent.id].start.y < self.lines[active_segments[curr - 1][1]].start.y:
+                                q.put(Event(intersections[-1].x, 2, (currEvent.id, active_segments[curr - 1][1])))
+                            else:
+                                q.put(Event(intersections[-1].x, 2, (active_segments[curr - 1][1], currEvent.id)))
+
+                # Sprawdza czy przecina się z sąsiadem nad nim
                 if curr < len(active_segments) - 1:
-                    if self.lines[event.id].does_intersect(self.lines[active_segments[curr + 1][1]]):
-                        intersections.append(self.lines[event.id].intersection_point(self.lines[active_segments[curr + 1][1]]))
-                        self.drawPoints(intersections, (255, 0, 0))
-                pygame.display.flip()
+                    if self.lines[currEvent.id].does_intersect(self.lines[active_segments[curr + 1][1]]):
+                        if (min(currEvent.id, active_segments[curr + 1][1]),
+                            max(currEvent.id, active_segments[curr + 1][1])) in calculatedPairs:
+                            pass
+                        else:
+                            intersections.append(
+                                self.lines[currEvent.id].intersection_point(self.lines[active_segments[curr + 1][1]]))
+                            calculatedPairs.append((min(currEvent.id, active_segments[curr + 1][1]),
+                                                    max(currEvent.id, active_segments[curr + 1][1])))
+
+                            if self.lines[currEvent.id].start.y < self.lines[active_segments[curr + 1][1]].start.y:
+                                q.put(Event(intersections[-1].x, 2, (currEvent.id, active_segments[curr + 1][1])))
+                            else:
+                                q.put(Event(intersections[-1].x, 2, (active_segments[curr + 1][1], currEvent.id)))
+
+            elif currEvent.is_start == 0:
+                active_segments.discard((self.lines[currEvent.id].curr, currEvent.id))
 
             else:
-                active_segments.remove((self.lines[event.id].start.y, event.id))
+                if (self.lines[currEvent.id[0]].curr, currEvent.id[0]) in active_segments:
+                    active_segments.discard((self.lines[currEvent.id[0]].curr, currEvent.id[0]))
+                    self.lines[currEvent.id[0]].curr = self.lines[currEvent.id[0]].get_slope() * (currEvent.val + 10 ** (-5)) + \
+                                                  self.lines[currEvent.id[0]].get_intercept()
+                    q.put(Event(currEvent.val + 10 ** (-5), 1, currEvent.id[0]))
+
+                if (self.lines[currEvent.id[1]].curr, currEvent.id[1]) in active_segments:
+                    active_segments.discard((self.lines[currEvent.id[1]].curr, currEvent.id[1]))
+                    self.lines[currEvent.id[1]].curr = self.lines[currEvent.id[1]].get_slope() * (currEvent.val + 10 ** (-5)) + \
+                                                  self.lines[currEvent.id[1]].get_intercept()
+                    q.put(Event(currEvent.val + 10 ** (-5), 1, currEvent.id[1]))
+
+        # Restat curr value for every line
+        for i in range(len(self.lines)):
+            self.lines[i].curr = self.lines[i].start.y
 
 
 
@@ -94,6 +134,7 @@ class App:
         started_line = False
         genButton = Button(self.WIDTH - self.WIDTH//4, self.HEIGHT-80, self.WIDTH//4, 80, self.window, "Generuj")
         animButton = Button(self.WIDTH - 2*self.WIDTH//4, self.HEIGHT-80, self.WIDTH//4, 80, self.window, "Animacja")
+        clearButton = Button(self.WIDTH - 3*self.WIDTH//4, self.HEIGHT-80, self.WIDTH//4, 80, self.window, "Wyczyść")
 
         while self.isRunning:
 
@@ -102,10 +143,14 @@ class App:
                     self.isRunning = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1 and genButton.isClicked():
-                        self.generateRandom(8)
+                        self.generateRandom(5)
                         self.drawCurrent()
-                    if event.button == 1 and animButton.isClicked():
+                    elif event.button == 1 and animButton.isClicked():
                         self.sweepAnimation()
+                    elif event.button == 1 and clearButton.isClicked():
+                        self.lines = []
+                        self.points = []
+                        self.drawCurrent()
                     elif event.button == 1 and not started_line:
                         self.addPoint()
                         started_line = True
@@ -120,6 +165,7 @@ class App:
 
             genButton.draw()
             animButton.draw()
+            clearButton.draw()
             pygame.display.flip()
 
         pygame.quit()
